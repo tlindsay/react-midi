@@ -1,12 +1,40 @@
-import React from 'react';
+import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import * as serviceWorker from './serviceWorker';
+import WebMidi from 'webmidi';
+import retry from 'async-retry';
 
-ReactDOM.render(<App />, document.getElementById('root'));
+class MidiContext extends Component {
+  constructor(props) {
+    super(...arguments);
+    this.state = { inputs: [] };
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+    this.initializeMidi();
+  }
+
+  componentWillUnmount() {
+    console.info('Removing MIDI event listeners')
+    this.state.inputs.forEach((input) => input.removeListener());
+  }
+
+  async initializeMidi() {
+    await retry(async () => {
+      console.info('Attempting to initialize MIDI');
+      WebMidi.enable((err) => {
+        if (!err) {
+          console.info('MIDI enabled');
+          this.state.inputs = WebMidi.inputs;
+        }
+      });
+    });
+  }
+
+  render() {
+    return (
+      <></>
+    );
+  }
+}
+
+ReactDOM.render(<MidiContext />, document.getElementById('root'));
+
+export default MidiContext;
